@@ -11,8 +11,6 @@ benchmark1, benchmark2 = streamlit.columns(2)
 benchexpr = benchmark1.text_input("Expression: $f(x)$")
 benchcycle = benchmark2.text_input("Cycle variable: ")
 
-# benchmark time on 10^n for n = 1 through 6 between this and compiled python
-# create a table with the results for each input size
 if streamlit.button("Benchmark Expression"):
     data = []    
     for i in range(7):
@@ -22,7 +20,9 @@ if streamlit.button("Benchmark Expression"):
         data.append({
             "Input Size": 10**i,
             "CR Time (ms)": time_taken,
-            "Compiled Time (ms)": compiled_time
+            "Compiled Time (ms)": compiled_time,
+            "Delta (ms)": time_taken - compiled_time,
+            "Speedup" : compiled_time/time_taken if compiled_time > 0 else float('inf')
         })
     
     df = pd.DataFrame(data)

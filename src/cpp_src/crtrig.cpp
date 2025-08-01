@@ -189,10 +189,10 @@ std::string CRtrig::genCode(size_t parent, size_t order, ssize_t place,std::stri
             }
         }
     } else { 
-        res += std::format("{}for i in range({}):\n{}    {}{}[i]+={}{}[i+1]\n", 
+        res += std::format("{}for i in range({}):\n{}{}{}[i]+={}{}[i+1]\n", 
             indent, 
             operands.size()-1,
-            indent,
+            indent+"    ",
             crprefix,crposition,
             crprefix,crposition
         );
