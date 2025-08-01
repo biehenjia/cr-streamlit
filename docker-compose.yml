@@ -1,0 +1,50 @@
+version: "3.8"
+
+services:
+  builder:
+    image: pycr-builder
+    build:
+      context: .
+      dockerfile: Dockerfile
+      target: builder
+    volumes:
+      - ./:/app
+    working_dir: /app
+    command: >
+      sh -c "
+        rm -rf build &&
+        mkdir build && cd build &&
+        cmake -DCMAKE_BUILD_TYPE=Debug .. &&
+        make -j\$(nproc) &&
+        mv /app/pycrlib.so /app/src/py/pycrlib.so &&
+        rm -rf /app/build
+      "
+
+  tester:
+    image: pycr-builder
+    depends_on:
+      - builder
+    volumes:
+      - ./:/app
+    working_dir: /app
+    environment:
+      PYTHONPATH: /app/src/py:/app/src
+    command: python3 tests/test.py
+  
+  streamlit:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    volumes:
+      - ./:/app
+    working_dir: /app
+    environment:
+      PYTHONPATH: /app/src/py:/app/src
+    ports:
+      - "8501:8501"
+    command: >
+      streamlit run tests/app.py
+      --server.address=0.0.0.0
+      --server.port=8501
+
+
