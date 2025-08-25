@@ -60,7 +60,7 @@ def staticexamples():
     
     if st.button("Evaluate Expression"):
         
-        result, time_taken = app.evalcr(SE_expr, SE_cycle.split(";"))
+        result, time_taken = pycr.evalcr(SE_expr, SE_cycle.split(";"))
         topy = mtp(SE_expr)
         r2, t2 = benchmarking.bench_blocks_py(topy, SE_cycle)
         r3, t3 = benchmarking.bench_blocks_subs(topy,SE_cycle)
@@ -87,7 +87,7 @@ def benchmark():
     SE_expr = SE_i1.text_input("Expression:",key="expr")
     SE_cycle = SE_i2.text_input("Cycle variable: ",key="params")
     if st.button("Generate Code"):
-        code, time_taken = app.crgen(SE_expr, SE_cycle.split(";"))
+        code, time_taken = pycr.crgen(SE_expr, SE_cycle.split(";"))
         st.code(code)
     
     # content = st_ace(theme="twilight", auto_update=True)
