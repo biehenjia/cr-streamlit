@@ -1,3 +1,4 @@
 streamlit-ace
 py-chains-of-recurrences
 streamlit-ace
+symengine
