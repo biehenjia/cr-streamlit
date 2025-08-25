@@ -64,7 +64,7 @@ def staticexamples():
             topy = mtp(SE_expr)
             r2, t2 = benchmarking.bench_blocks_py(topy, SE_cycle)
             r3, t3 = benchmarking.bench_blocks_subs(topy,SE_cycle)
-            df = pd.DataFrame({"method":["pycr", "compiled", "substitution"],
+            df = pd.DataFrame({"method":["pycr (sequential)", "vectorized (SIMD)", "naive"],
                             "time (ms)":[time_taken, t2, t3],
                             })
             st.dataframe(df, use_container_width=True)
