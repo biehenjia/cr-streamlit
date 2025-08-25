@@ -59,18 +59,17 @@ def staticexamples():
     SE_cycle = SE_i2.text_input("Cycle variable: ",key="params")
     
     if st.button("Evaluate Expression"):
-        
-        result, time_taken = pycr.evalcr(SE_expr, SE_cycle.split(";"))
-        topy = mtp(SE_expr)
-        r2, t2 = benchmarking.bench_blocks_py(topy, SE_cycle)
-        r3, t3 = benchmarking.bench_blocks_subs(topy,SE_cycle)
-        df = pd.DataFrame({"method":["pycr", "compiled", "substitution"],
-                        "time (ms)":[time_taken, t2, t3],
-                        "last value": [result,r2,r3]
-                        })
-        st.dataframe(df, use_container_width=True)
-
-        # st.error("Error occurred during benchmarking!")
+        try:
+            result, time_taken = pycr.evalcr(SE_expr, SE_cycle.split(";"))
+            topy = mtp(SE_expr)
+            r2, t2 = benchmarking.bench_blocks_py(topy, SE_cycle)
+            r3, t3 = benchmarking.bench_blocks_subs(topy,SE_cycle)
+            df = pd.DataFrame({"method":["pycr", "compiled", "substitution"],
+                            "time (ms)":[time_taken, t2, t3],
+                            })
+            st.dataframe(df, use_container_width=True)
+        except:
+            st.error("Error occurred during benchmarking!")
     # WRITE TO SUBPROCESS WITH MAX TIMER 
     st.divider()
     st.page_link(home_page, label="home", icon=":material/home:")
@@ -87,8 +86,12 @@ def benchmark():
     SE_expr = SE_i1.text_input("Expression:",key="expr")
     SE_cycle = SE_i2.text_input("Cycle variable: ",key="params")
     if st.button("Generate Code"):
-        code, time_taken = pycr.crgen(SE_expr, SE_cycle.split(";"))
-        st.code(code)
+        try:
+
+            code, time_taken = pycr.crgen(SE_expr, SE_cycle.split(";"))
+            st.code(code)
+        except:
+            st.error("Error occurred during generation!")
     
     # content = st_ace(theme="twilight", auto_update=True)
     # if st.button("Run Code"):
