@@ -76,12 +76,15 @@ def staticexamples():
 
 # ---- EXAMPLES END -----------
 
+
+
+
 # ----- BENCHMARK SANDBOX START --------
 
 def benchmark(): 
     st.title("code generation")
     st.markdown("enter expression and parameters below. For more information on formatting, view examples.")
-    
+    choice = st.pills("select a preset or input your own",example_options,key="ex_name",on_change=applyexample)
     SE_i1,SE_i2 = st.columns(2)
     SE_expr = SE_i1.text_input("Expression:",key="expr")
     SE_cycle = SE_i2.text_input("Cycle variable: ",key="params")
