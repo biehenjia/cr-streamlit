@@ -12,7 +12,7 @@ def mtp(expr):
     return expr
 
 # Optional: global defaults that apply to every page unless overridden
-st.set_page_config(page_title="Demo MPA", page_icon="")
+st.set_page_config(page_title="CR Demo", page_icon="")
 
 # ---- Session state bootstrap (safe to call every run)
 st.session_state.setdefault("df", None)
