@@ -59,22 +59,22 @@ def staticexamples():
     SE_cycle = SE_i2.text_input("Cycle variable: ",key="params")
     
     if st.button("Evaluate Expression"):
-        try:
-            result, time_taken = pycr.evalcr(SE_expr, SE_cycle.split(";"))
-            topy = mtp(SE_expr)
-            r2, t2 = benchmarking.bench_blocks_py(topy, SE_cycle)
-            r3, t3 = benchmarking.bench_blocks_subs(topy,SE_cycle)
-            df = pd.DataFrame({"method":["pycr (sequential)", "compiled + vectorized (SIMD)", "naive"],
-                            "time (ms)":[time_taken, t2, t3], 
-                            "1st value":[result[0],r2[0],r3[0]],
-                            "2nd value":[None,None,None],
-                            "last value":[result[-1],r2[-1],r3[-1]]
-                            })
-            if len(result) > 1:
-                df["2nd value"] = [result[1], r2[1], r3[1]]
-            st.dataframe(df)
-        except:
-            st.error("Error occurred during benchmarking!")
+        
+        result, time_taken = pycr.evalcr(SE_expr, SE_cycle.split(";"))
+        topy = mtp(SE_expr)
+        r2, t2 = benchmarking.bench_blocks_py(topy, SE_cycle)
+        r3, t3 = benchmarking.bench_blocks_subs(topy,SE_cycle)
+        df = pd.DataFrame({"method":["pycr (sequential)", "compiled + vectorized (SIMD)", "naive"],
+                        "time (ms)":[time_taken, t2, t3], 
+                        "1st value":[result[0],r2[0],r3[0]],
+                        "2nd value":[None,None,None],
+                        "last value":[result[-1],r2[-1],r3[-1]]
+                        })
+        if len(result) > 1:
+            df["2nd value"] = [result[1], r2[1], r3[1]]
+        st.dataframe(df)
+    
+        #st.error("Error occurred during benchmarking!")
     # WRITE TO SUBPROCESS WITH MAX TIMER 
     st.divider()
     st.page_link(home_page, label="home", icon=":material/home:")
