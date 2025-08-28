@@ -65,8 +65,13 @@ def staticexamples():
             r2, t2 = benchmarking.bench_blocks_py(topy, SE_cycle)
             r3, t3 = benchmarking.bench_blocks_subs(topy,SE_cycle)
             df = pd.DataFrame({"method":["pycr (sequential)", "compiled + vectorized (SIMD)", "naive"],
-                            "time (ms)":[time_taken, t2, t3],
+                            "time (ms)":[time_taken, t2, t3], 
+                            "1st value":[result[0],r2[0],r3[0]],
+                            "2nd value":[None,None,None],
+                            "last value":[result[-1],r2[-1],r3[-1]]
                             })
+            if len(result) > 1:
+                df["2nd value"] = [result[1], r2[1], r3[1]]
             st.dataframe(df, use_container_width=True)
         except:
             st.error("Error occurred during benchmarking!")
