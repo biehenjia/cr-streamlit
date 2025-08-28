@@ -31,42 +31,130 @@ def bench_blocks(expr_s, blocks_s, reps_s="1", limit_s="2"):
         t0=time.perf_counter(); _=f(*grids); t1=time.perf_counter(); ts.append(t1-t0)
     dt=min(ts); n=int(np.prod(counts))
     return {"n":n,"ms":dt*1e3,"evals_per_s":n/max(dt,1e-12)}
+def _coerce_to_target_array(val, counts):
+    """
+    Safely coerce `val` into an ndarray of shape=counts without raising.
+    Strategy: exact match -> broadcast -> reshape (if sizes match) -> repeat/truncate.
+    """
+    target = tuple(counts)
+    try:
+        arr = np.asarray(val)
+    except Exception:
+        arr = np.array(val, dtype=object)
+
+    # Scalar -> broadcast
+    if arr.shape == ():
+        try:
+            return np.full(target, arr.item())
+        except Exception:
+            return np.full(target, arr, dtype=object)
+
+    # Exact shape
+    if arr.shape == target:
+        return arr
+
+    # Try broadcast
+    try:
+        return np.broadcast_to(arr, target).copy()
+    except Exception:
+        pass
+
+    # Try reshape if same size
+    if arr.size == int(np.prod(counts)):
+        try:
+            return arr.reshape(target)
+        except Exception:
+            pass
+
+    # Fallback: repeat/truncate into target
+    flat = np.resize(arr, int(np.prod(counts)))
+    try:
+        return flat.reshape(target)
+    except Exception:
+        out = np.empty(target, dtype=object)
+        out.flat[:] = np.resize(np.array(arr, dtype=object), out.size).flat
+        return out
+
+
+def _maybe_numeric(a):
+    """
+    Best-effort downcast to float or complex; otherwise keep object.
+    Never raises.
+    """
+    try:
+        return np.array(a, dtype=float)
+    except Exception:
+        try:
+            return np.array(a, dtype=complex)
+        except Exception:
+            return np.array(a, dtype=object)
+
 
 def bench_blocks_subs(expr_s, blocks_s, reps_s="1", limit_s="2"):
-    e=se.sympify(expr_s)
-    names,starts,steps,counts=_parse(blocks_s)
-    counts=_cap([int(c) for c in counts])
-    syms=[se.Symbol(n) for n in names]
-    ts=[]; reps=int(reps_s); n=int(np.prod(counts))
-    last=None
+    e = se.sympify(expr_s)
+    names, starts, steps, counts = _parse(blocks_s)
+    counts = _cap([int(c) for c in counts])
+    syms = [se.Symbol(n) for n in names]
+
+    reps = int(reps_s)
+    shape = tuple(counts)
+    ts = []
+    best_dt = float("inf")
+    best = None
+
     for _ in range(reps):
-        t0=time.perf_counter()
+        t0 = time.perf_counter()
+        res = np.empty(shape, dtype=object)
         for idx in np.ndindex(*counts):
-            sub={syms[i]: starts[i]+steps[i]*idx[i] for i in range(len(syms))}
-            last=e.subs(sub).n()
-        ts.append(time.perf_counter()-t0)
-    dt=min(ts)
-    return last, dt*1e3
+            sub = {syms[i]: starts[i] + steps[i] * idx[i] for i in range(len(syms))}
+            res[idx] = e.subs(sub).n()
+        dt = time.perf_counter() - t0
+        ts.append(dt)
+        if dt < best_dt:
+            best_dt = dt
+            best = res
+
+    return best, min(ts) * 1e3
 
 
 def bench_blocks_py(expr_s, blocks_s, reps_s="1", limit_s="2"):
-    code=compile(expr_s,"<expr>","eval")
-    names,starts,steps,counts=_parse(blocks_s)
-    counts=_cap([int(c) for c in counts])
-    axes=[s+u*np.arange(k) for s,u,k in zip(starts,steps,counts)]
-    grids=np.meshgrid(*axes, indexing="ij")
-    env=dict(np.__dict__); [env.__setitem__(k,v) for k,v in zip(names,grids)]
-    ts=[]; reps=int(reps_s)
-    last=None
+    code = compile(expr_s, "<expr>", "eval")
+    names, starts, steps, counts = _parse(blocks_s)
+    counts = _cap([int(c) for c in counts])
+
+    axes = [s + u * np.arange(k) for s, u, k in zip(starts, steps, counts)]
+    grids = np.meshgrid(*axes, indexing="ij")
+    env = dict(np.__dict__); [env.__setitem__(k, v) for k, v in zip(names, grids)]
+
+    reps = int(reps_s)
+    ts = []
+    best_dt = float("inf")
+    best = None
+    target = tuple(counts)
+    n = int(np.prod(counts))
+
     for _ in range(reps):
-        t0=time.perf_counter()
-        val=eval(code,env,{})
-        ts.append(time.perf_counter()-t0)
-        arr=np.asarray(val)
-        last = arr.ravel()[-1] if arr.size else val
-        if hasattr(last,"item"): last=last.item()
-    dt=min(ts); n=int(np.prod(counts))
-    return last, dt*1e3
+        t0 = time.perf_counter()
+        val = eval(code, env, {})
+        dt = time.perf_counter() - t0
+        ts.append(dt)
+
+        arr = np.asarray(val)
+        if arr.shape == ():
+            arr = np.full(target, arr.item())
+        elif arr.shape == target:
+            arr = arr
+        elif arr.size == n:
+            arr = arr.reshape(target)
+        else:
+            arr = np.resize(arr, n).reshape(target)
+
+        if dt < best_dt:
+            best_dt = dt
+            best = arr
+
+    return best, min(ts) * 1e3
+
 
 
 #print(bench_blocks_py("x**9+x**8+x**7+x**6+x**5+x**4+(1.0000001)**x", "x,0,0.001,1000000"))

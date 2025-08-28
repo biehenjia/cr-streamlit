@@ -72,7 +72,7 @@ def staticexamples():
                             })
             if len(result) > 1:
                 df["2nd value"] = [result[1], r2[1], r3[1]]
-            st.dataframe(df, use_container_width=True)
+            st.dataframe(df)
         except:
             st.error("Error occurred during benchmarking!")
     # WRITE TO SUBPROCESS WITH MAX TIMER 
