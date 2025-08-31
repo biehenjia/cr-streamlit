@@ -31,63 +31,6 @@ def bench_blocks(expr_s, blocks_s, reps_s="1", limit_s="2"):
         t0=time.perf_counter(); _=f(*grids); t1=time.perf_counter(); ts.append(t1-t0)
     dt=min(ts); n=int(np.prod(counts))
     return {"n":n,"ms":dt*1e3,"evals_per_s":n/max(dt,1e-12)}
-def _coerce_to_target_array(val, counts):
-    """
-    Safely coerce `val` into an ndarray of shape=counts without raising.
-    Strategy: exact match -> broadcast -> reshape (if sizes match) -> repeat/truncate.
-    """
-    target = tuple(counts)
-    try:
-        arr = np.asarray(val)
-    except Exception:
-        arr = np.array(val, dtype=object)
-
-    # Scalar -> broadcast
-    if arr.shape == ():
-        try:
-            return np.full(target, arr.item())
-        except Exception:
-            return np.full(target, arr, dtype=object)
-
-    # Exact shape
-    if arr.shape == target:
-        return arr
-
-    # Try broadcast
-    try:
-        return np.broadcast_to(arr, target).copy()
-    except Exception:
-        pass
-
-    # Try reshape if same size
-    if arr.size == int(np.prod(counts)):
-        try:
-            return arr.reshape(target)
-        except Exception:
-            pass
-
-    # Fallback: repeat/truncate into target
-    flat = np.resize(arr, int(np.prod(counts)))
-    try:
-        return flat.reshape(target)
-    except Exception:
-        out = np.empty(target, dtype=object)
-        out.flat[:] = np.resize(np.array(arr, dtype=object), out.size).flat
-        return out
-
-
-def _maybe_numeric(a):
-    """
-    Best-effort downcast to float or complex; otherwise keep object.
-    Never raises.
-    """
-    try:
-        return np.array(a, dtype=float)
-    except Exception:
-        try:
-            return np.array(a, dtype=complex)
-        except Exception:
-            return np.array(a, dtype=object)
 
 
 def bench_blocks_subs(expr_s, blocks_s, reps_s="1", limit_s="2"):
@@ -114,7 +57,9 @@ def bench_blocks_subs(expr_s, blocks_s, reps_s="1", limit_s="2"):
             best_dt = dt
             best = res
 
-    return best, min(ts) * 1e3
+    flat = best.ravel()
+    values = (flat[0], flat[1] if flat.size > 1 else None, flat[-1])
+    return best, min(ts) * 1e3, values
 
 
 def bench_blocks_py(expr_s, blocks_s, reps_s="1", limit_s="2"):
@@ -153,7 +98,9 @@ def bench_blocks_py(expr_s, blocks_s, reps_s="1", limit_s="2"):
             best_dt = dt
             best = arr
 
-    return best, min(ts) * 1e3
+    flat = best.ravel()
+    values = (flat[0], flat[1] if flat.size > 1 else None, flat[-1])
+    return best, min(ts) * 1e3, values
 
 
 
