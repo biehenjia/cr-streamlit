@@ -71,7 +71,7 @@ def staticexamples():
                         "last value":[result[-1],v2[-1],v3[-1]]
                         })
         if len(result) > 1:
-            df["2nd value"] = [result[1], r2[1], r3[1]]
+            df["2nd value"] = [result[1], v2[1], v3[1]]
         st.dataframe(df)
     
         #st.error("Error occurred during benchmarking!")
