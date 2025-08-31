@@ -62,13 +62,13 @@ def staticexamples():
         
         result, time_taken = pycr.evalcr(SE_expr, SE_cycle.split(";"))
         topy = mtp(SE_expr)
-        r2, t2 = benchmarking.bench_blocks_py(topy, SE_cycle)
-        r3, t3 = benchmarking.bench_blocks_subs(topy,SE_cycle)
+        r2, t2, v2 = benchmarking.bench_blocks_py(topy, SE_cycle)
+        r3, t3, v3 = benchmarking.bench_blocks_subs(topy,SE_cycle)
         df = pd.DataFrame({"method":["pycr (sequential)", "compiled + vectorized (SIMD)", "naive"],
                         "time (ms)":[time_taken, t2, t3], 
-                        "1st value":[result[0],r2[0],r3[0]],
+                        "1st value":[result[0],v2[0],v3[0]],
                         "2nd value":[None,None,None],
-                        "last value":[result[-1],r2[-1],r3[-1]]
+                        "last value":[result[-1],v2[-1],v3[-1]]
                         })
         if len(result) > 1:
             df["2nd value"] = [result[1], r2[1], r3[1]]
